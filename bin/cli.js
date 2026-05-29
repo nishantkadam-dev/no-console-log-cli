@@ -1,21 +1,22 @@
 #!/usr/bin/env node
 
-import { parseArgs } from "node:util";
+import { program } from "commander";
 import { ESLint } from "eslint";
 import noConsoleLog from "../rules/no-console-log.js";
 
-const { positionals, values } = parseArgs({
-  allowPositionals: true,
-  options: {
-    ignore: {
-      type: "string",
-      short: "i",
-    },
-  },
-});
+program
+  .name("lint-check")
+  .description("Simple CLI tool to find console.log statements in JavaScript files using a custom ESLint rule.")
+  .version("1.0.0", "-V, --version", "Show current CLI version.")
+  .argument("<path>", "Folder path that should be scanned.")
+  .option("-i, --ignore <dirs>", "Comma separated folders to ignore while scanning.", "scripts,tests")
+  .addHelpText("after", `
 
-const targetPath = positionals[0];
-const ignoredDirs = values.ignore ? values.ignore.split(",") : ["scripts", "tests"];
+  `)
+  .parse();
+
+const targetPath = program.args[0];
+const ignoredDirs = program.opts().ignore ? program.opts().ignore.split(",") : ["scripts", "tests"];
 
 const eslint = new ESLint({
   overrideConfigFile: true,
