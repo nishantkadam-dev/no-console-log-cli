@@ -26,5 +26,37 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+      - name: Run lint-check and write summary
+        run: |
+          node bin/cli.js ./src --ignore node_modules,dist,tests > result.json; EXIT_CODE=$?
+
+          echo "## 🔍 lint-check results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          node --input-type=module << 'EOF' >> $GITHUB_STEP_SUMMARY
+            import { readFileSync } from 'fs';
+            const r = JSON.parse(readFileSync('./result.json', 'utf8'));
+            const lines = [];
+            lines.push('**Status:** ' + r.summary.status.toUpperCase());
+            lines.push('');
+            lines.push('| Metric | Value |');
+            lines.push('|---|---|');
+            lines.push('| Files scanned | ' + r.summary.total_files_scanned + ' |');
+            lines.push('| Violations | ' + r.summary.total_violations + ' |');
+            if (r.violations.length > 0) {
+              lines.push('');
+              lines.push('### Violations');
+              lines.push('');
+              lines.push('| File | Line | Message |');
+              lines.push('|---|---|---|');
+              r.violations.forEach(v =>
+                lines.push('| `' + v.file_path + '` | ' + v.line + ' | ' + v.message + ' |')
+              );
+            }
+            console.log(lines.join('\n'));
+          EOF
+
+          exit $EXIT_CODE
+
       - name: Run tests
         run: npm test
