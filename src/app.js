@@ -1,5 +1,5 @@
-function doSomething() {
+export function doSomething(input) {
   console.log("debug info");
   console.warn("this is fine");
-  console.log(someVar);
+  console.log(input);
 }
